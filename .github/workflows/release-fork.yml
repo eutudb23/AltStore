@@ -1,0 +1,136 @@
+name: Release Forked AltStore
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version, for example 2.3b2-fork.1
+        required: true
+        type: string
+  push:
+    tags:
+      - "fork-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    timeout-minutes: 180
+
+    steps:
+      - name: Check out AltStore and submodules
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Select release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#fork-v}"
+            tag="${GITHUB_REF_NAME}"
+          else
+            version="${{ inputs.version }}"
+            tag="fork-v${version}"
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare iOS build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          brew install cocoapods
+          rustup target add aarch64-apple-ios
+          cargo install --force --locked bindgen-cli
+
+          cd Dependencies/idevice/ffi
+          BINDGEN_EXTRA_CLANG_ARGS="--sysroot=$(xcrun --sdk iphoneos --show-sdk-path)" \
+            IPHONEOS_DEPLOYMENT_TARGET=17.0 \
+            cargo build --release --target aarch64-apple-ios --features obfuscate
+          cd ..
+
+          mkdir -p swift/include
+          cp ffi/idevice.h swift/include/idevice.h
+          xcodebuild -create-xcframework \
+            -library target/aarch64-apple-ios/release/libidevice_ffi.a \
+            -headers swift/include \
+            -output swift/IDevice.xcframework
+
+          cd ../..
+          pod install
+
+      - name: Build unsigned AltStore app
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -workspace AltStore.xcworkspace \
+            -scheme AltStore \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath "$RUNNER_TEMP/AltStoreBuild" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package IPA and source manifest
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/package/Payload"
+          ditto \
+            "$RUNNER_TEMP/AltStoreBuild/Build/Products/Release-iphoneos/AltStore.app" \
+            "$RUNNER_TEMP/package/Payload/AltStore.app"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$RUNNER_TEMP/package/Payload" \
+            "$RUNNER_TEMP/AltStore.ipa"
+
+          cat > "$RUNNER_TEMP/apps.json" <<EOF
+          {
+            "name": "AltStore Fork",
+            "identifier": "com.eutudb23.altstore",
+            "apps": [
+              {
+                "name": "AltStore",
+                "bundleIdentifier": "com.rileytestut.AltStore",
+                "versions": [
+                  {
+                    "version": "${RELEASE_VERSION}",
+                    "downloadURL": "https://github.com/eutudb23/AltStore/releases/latest/download/AltStore.ipa",
+                    "minOSVersion": "17.4"
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+
+          shasum -a 256 "$RUNNER_TEMP/AltStore.ipa" "$RUNNER_TEMP/apps.json"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" \
+              "$RUNNER_TEMP/AltStore.ipa" \
+              "$RUNNER_TEMP/apps.json" \
+              --clobber
+          else
+            gh release create "$RELEASE_TAG" \
+              "$RUNNER_TEMP/AltStore.ipa" \
+              "$RUNNER_TEMP/apps.json" \
+              --title "AltStore ${RELEASE_TAG}" \
+              --generate-notes \
+              --latest
+          fi

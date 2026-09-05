@@ -15,7 +15,7 @@ import OSLog
 #if STAGING
 let altstoreSourceURL = URL(string: "https://f000.backblazeb2.com/file/altstore-staging/apps-staging.json")!
 #else
-let altstoreSourceURL = URL(string: "https://apps.altstore.io")!
+let altstoreSourceURL = URL(string: "https://github.com/eutudb23/AltStore/releases/latest/download/apps.json")!
 #endif
 
 #if BETA
