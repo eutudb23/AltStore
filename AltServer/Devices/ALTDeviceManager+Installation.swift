@@ -9,8 +9,6 @@
 import Cocoa
 import UserNotifications
 import ObjectiveC
-import CryptoKit
-import OSLog
 
 #if STAGING
 let altstoreSourceURL = URL(string: "https://f000.backblazeb2.com/file/altstore-staging/apps-staging.json")!
@@ -200,10 +198,10 @@ extension ALTDeviceManager
                                                                             {
                                                                                 let profiles = try result.get()
                                                                                 
-                                                                                self.encryptedPairingData(for: application, device: device, certificate: certificate) { pairingFile in
-                                                                                    self.install(application, to: device, team: team, certificate: certificate, profiles: profiles, pairingFile: pairingFile) { (result) in
-                                                                                        finish(result.map { application })
-                                                                                    }
+                                                                                // Remote AltServer is opt-in from AltStore Settings. Do not
+                                                                                // silently switch normal installs to the local-VPN route.
+                                                                                self.install(application, to: device, team: team, certificate: certificate, profiles: profiles, pairingFile: nil) { (result) in
+                                                                                    finish(result.map { application })
                                                                                 }
                                                                             }
                                                                             catch
@@ -276,41 +274,6 @@ private extension ALTDeviceManager
         }
     }
     
-    // Generates and encrypts a device pairing file to bundle into AltStore.app.
-    func encryptedPairingData(for application: ALTApplication, device: ALTDevice, certificate: ALTCertificate, completionHandler: @escaping (Data?) -> Void)
-    {
-        // Only applies to AltStore installs with a machineIdentifier.
-        guard application.isAltStoreApp, let machineIdentifier = certificate.machineIdentifier else
-        {
-            completionHandler(nil)
-            return
-        }
-
-        let hostName = "AltServer on \(Host.current().localizedName ?? "Mac")"
-
-        Task<Void, Never> {
-            do
-            {
-                let pairingFile = try await DevicePairingManager.shared.generatePairingFile(forDeviceWithUDID: device.identifier, hostName: hostName)
-
-                // Encrypt with a key derived from the certificate's machineIdentifier.
-                let key = SymmetricKey(data: SHA256.hash(data: machineIdentifier.data(using: .utf8)!))
-                let sealedBox = try AES.GCM.seal(pairingFile, using: key)
-
-                guard let sealedData = sealedBox.combined else
-                {
-                    throw RemotePairingError.unknown(failureReason: NSLocalizedString("Failed to encrypt the generated pairing file.", comment: ""))
-                }
-
-                completionHandler(sealedData)
-            }
-            catch
-            {
-                Logger.main.notice("Skipped bundling pairing file: \(error.localizedDescription, privacy: .public)")
-                completionHandler(nil)
-            }
-        }
-    }
 }
 
 private extension ALTDeviceManager

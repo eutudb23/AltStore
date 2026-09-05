@@ -12,7 +12,6 @@ import UserNotifications
 import MobileCoreServices
 import Intents
 import Combine
-import CryptoKit
 import WidgetKit
 import UniformTypeIdentifiers
 
@@ -100,31 +99,10 @@ class AppManager: ObservableObject
 
 extension AppManager
 {
-    // Keychain-first (via Settings, most up-to-date if it exists), bundle as fallback.
+    // Remote AltServer is opt-in. Only use a pairing file explicitly configured
+    // from Settings; otherwise keep using the paired Mac AltServer over USB/Wi-Fi.
     var devicePairingFile: Data? {
-        if let keychainData = Keychain.shared.devicePairingFile
-        {
-            return keychainData
-        }
-
-        // Bundle fallback requires machineIdentifier for decryption.
-        guard let encryptedData = try? Data(contentsOf: Bundle.main.pairingFileURL),
-              let machineIdentifier = Keychain.shared.signingCertificatePassword
-        else { return nil }
-
-        let key = SymmetricKey(data: SHA256.hash(data: machineIdentifier.data(using: .utf8)!)) // Swift string, always valid UTF-8
-
-        do
-        {
-            let sealedBox = try AES.GCM.SealedBox(combined: encryptedData)
-            return try AES.GCM.open(sealedBox, using: key)
-        }
-        catch
-        {
-            // Bundle present + key present but decrypt failed
-            Logger.sideload.error("Bundled pairing file decrypt failed: \(error.localizedDescription, privacy: .public)")
-            return nil
-        }
+        Keychain.shared.devicePairingFile
     }
 
     // Starts on-device connection via minimuxer (idempotent).
