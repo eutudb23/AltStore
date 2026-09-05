@@ -26,6 +26,10 @@
 		BF088D372501A821008082D9 /* AltSign-Dynamic in Embed Frameworks */ = {isa = PBXBuildFile; productRef = BF088D352501A821008082D9 /* AltSign-Dynamic */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BF088D382501A833008082D9 /* OpenSSL.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF088D322501A4FF008082D9 /* OpenSSL.xcframework */; };
 		BF088D392501A833008082D9 /* OpenSSL.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF088D322501A4FF008082D9 /* OpenSSL.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		CA1776000000000000000001 /* AltSign-Static in Frameworks */ = {isa = PBXBuildFile; productRef = CA1776000000000000000003 /* AltSign-Static */; };
+		CA1776000000000000000002 /* libcorecrypto_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D59AE9F02D9F3B2D0064E176 /* libcorecrypto_static.a */; };
+		CA1776000000000000000004 /* AltSign-Static in Frameworks */ = {isa = PBXBuildFile; productRef = CA1776000000000000000006 /* AltSign-Static */; };
+		CA1776000000000000000005 /* libcorecrypto_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D59AE9F02D9F3B2D0064E176 /* libcorecrypto_static.a */; };
 		BF0C4EBD22A1BD8B009A2DD7 /* AppManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0C4EBC22A1BD8B009A2DD7 /* AppManager.swift */; };
 		BF0DCA662433BDF500E3A595 /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0DCA652433BDF500E3A595 /* AnalyticsManager.swift */; };
 		BF10EB34248730750055E6DB /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF10EB33248730750055E6DB /* main.swift */; };
@@ -752,7 +756,6 @@
 			dstSubfolderSpec = 10;
 			files = (
 				BF088D392501A833008082D9 /* OpenSSL.xcframework in Embed Frameworks */,
-				BF088D372501A821008082D9 /* AltSign-Dynamic in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -856,7 +859,7 @@
 		BF0241A922F29CCD00129732 /* UserDefaults+AltServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaults+AltServer.swift"; sourceTree = "<group>"; };
 		BF08858222DE795100DE9F1E /* MyAppsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyAppsViewController.swift; sourceTree = "<group>"; };
 		BF08858422DE7EC800DE9F1E /* UpdateCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateCollectionViewCell.swift; sourceTree = "<group>"; };
-		BF088D322501A4FF008082D9 /* OpenSSL.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:67RAULRX93:Marcin Krzyzanowski"; lastKnownFileType = wrapper.xcframework; name = OpenSSL.xcframework; path = Dependencies/AltSign/Dependencies/OpenSSL/Frameworks/OpenSSL.xcframework; sourceTree = "<group>"; };
+		BF088D322501A4FF008082D9 /* OpenSSL.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = OpenSSL.xcframework; path = Dependencies/AltSign/Dependencies/OpenSSL/Frameworks/OpenSSL.xcframework; sourceTree = "<group>"; };
 		BF0C4EBC22A1BD8B009A2DD7 /* AppManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppManager.swift; sourceTree = "<group>"; };
 		BF0DCA652433BDF500E3A595 /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
 		BF10EB33248730750055E6DB /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -1359,9 +1362,10 @@
 			files = (
 				D58D5F2E26DFE68E00E55E38 /* LaunchAtLogin in Frameworks */,
 				BF088D382501A833008082D9 /* OpenSSL.xcframework in Frameworks */,
+				CA1776000000000000000002 /* libcorecrypto_static.a in Frameworks */,
 				BF4588882298DD3F00BD7491 /* libxml2.tbd in Frameworks */,
 				BF4588472298D4B000BD7491 /* libimobiledevice.a in Frameworks */,
-				BF088D362501A821008082D9 /* AltSign-Dynamic in Frameworks */,
+				CA1776000000000000000001 /* AltSign-Static in Frameworks */,
 				CA1DE71000000000000005A2 /* IDevice in Frameworks */,
 				A8BCEBEAC0620CF80A2FD26D /* Pods_AltServer.framework in Frameworks */,
 			);
@@ -1431,8 +1435,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D52DD35E2AAA89A600A7F2B6 /* AltSign-Dynamic in Frameworks */,
-				D537C85B2AA9507A009A1E08 /* libcorecrypto.tbd in Frameworks */,
+				CA1776000000000000000004 /* AltSign-Static in Frameworks */,
+				CA1776000000000000000005 /* libcorecrypto_static.a in Frameworks */,
 				D5FB7A2E2AA2859400EF863D /* ArgumentParser in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2726,7 +2730,7 @@
 			);
 			name = AltServer;
 			packageProductDependencies = (
-				BF088D352501A821008082D9 /* AltSign-Dynamic */,
+				CA1776000000000000000003 /* AltSign-Static */,
 				D58D5F2D26DFE68E00E55E38 /* LaunchAtLogin */,
 				CA1DE71000000000000005A1 /* IDevice */,
 			);
@@ -2892,7 +2896,7 @@
 			name = AltJIT;
 			packageProductDependencies = (
 				D5FB7A2D2AA2859400EF863D /* ArgumentParser */,
-				D52DD35D2AAA89A600A7F2B6 /* AltSign-Dynamic */,
+				CA1776000000000000000006 /* AltSign-Static */,
 			);
 			productName = AltJIT;
 			productReference = D5FB7A132AA284BE00EF863D /* altjit */;
@@ -4900,6 +4904,14 @@
 			productName = Minimuxer;
 		};
 		BF088D0E25019ABA008082D9 /* AltSign-Static */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = "AltSign-Static";
+		};
+		CA1776000000000000000003 /* AltSign-Static */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = "AltSign-Static";
+		};
+		CA1776000000000000000006 /* AltSign-Static */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = "AltSign-Static";
 		};
