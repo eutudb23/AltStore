@@ -454,8 +454,14 @@ private extension DatabaseManager
     
     func migrateDatabaseToAppGroupIfNeeded(completion: @escaping (Result<Void, Error>) -> Void)
     {
-        // Only migrate if we haven't migrated yet and there's a valid AltStore app group.
-        guard UserDefaults.shared.requiresAppGroupMigration && Bundle.main.altstoreAppGroup != nil else { return completion(.success(())) }
+        // Only migrate when the app group container is actually accessible. A sideloaded
+        // provisioning profile may omit the app-group entitlement even though ALTAppGroups is
+        // still present in Info.plist. In that case altstoreSharedDirectory is nil and both the
+        // legacy and destination URLs resolve to Application Support; attempting to replace a
+        // directory with itself fails with EINVAL on launch.
+        guard UserDefaults.shared.requiresAppGroupMigration,
+              FileManager.default.altstoreSharedDirectory != nil
+        else { return completion(.success(())) }
 
         func finish(_ result: Result<Void, Error>)
         {
