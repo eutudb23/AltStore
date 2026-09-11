@@ -19,12 +19,15 @@ private extension Bundle
 
 private extension ALTAnisetteData
 {
-    func sanitize(byReplacingBundleID bundleID: String)
+    /// Apple rejects GSA requests whose anisette client identifies itself as Xcode.
+    /// Normalize every anisette source (AOSKit, VM, remote server, or Mail) to akd.
+    func sanitizeForAppleAuthentication()
     {
-        guard let range = self.deviceDescription.lowercased().range(of: "(" + bundleID.lowercased()) else { return }
+        let marker = "<com.apple.authkit/1 ("
+        guard let range = self.deviceDescription.lowercased().range(of: marker) else { return }
         
-        var adjustedDescription = self.deviceDescription[..<range.lowerBound]
-        adjustedDescription += "(com.apple.akd/1.0)>"
+        var adjustedDescription = self.deviceDescription[..<range.upperBound]
+        adjustedDescription += "com.apple.akd/1.0)>"
         
         self.deviceDescription = String(adjustedDescription)
     }
@@ -75,6 +78,10 @@ extension ALTAnisetteData
                   date: date,
                   locale: locale,
                   timeZone: timeZone)
+
+        // VM and third-party anisette responses bypass the AOSKit/Mail-specific
+        // construction paths, so normalize their client identity here.
+        self.sanitizeForAppleAuthentication()
     }
 }
 
@@ -287,7 +294,7 @@ private extension AnisetteDataManager
             let archivedAnisetteData = userInfo["anisetteData"] as? Data,
             let anisetteData = try? NSKeyedUnarchiver.unarchivedObject(ofClass: ALTAnisetteData.self, from: archivedAnisetteData)
         {
-            anisetteData.sanitize(byReplacingBundleID: Bundle.ID.mail)
+            anisetteData.sanitizeForAppleAuthentication()
             self.finishRequest(forUUID: requestUUID, result: .success(anisetteData))
         }
         else
